@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="src/cc.core.js" type="text/javascript" charset="utf-8"></script>
+  <script src="src/cc.class.js" type="text/javascript" charset="utf-8"></script>
+  <script src="src/cc.geometry.js" type="text/javascript" charset="utf-8"></script>
+  <script src="src/cc.canvas2d.js" type="text/javascript" charset="utf-8"></script>
+  <script src="src/cc.textstorage.js" type="text/javascript" charset="utf-8"></script>
+  <script src="src/cc.scrollview.js" type="text/javascript" charset="utf-8"></script>
+  <script src="src/cc.textview.js" type="text/javascript" charset="utf-8"></script>
+  
+  <title>CoreCanvas</title>
+</head>
+<body>
+<script>
+var view = new CC.TextView();
+document.body.appendChild(view.element);
+view.element.style.height = "300px";
+view.text = "lorem ipsum\nlorem ipsum\nlorem ipsum\nlorem ipsum\nlorem ipsum\nlorem ipsum\nlorem ipsum\nlorem ipsum\nlorem ipsum\nlorem ipsum\nlorem ipsum\nlorem ipsum\nlorem ipsum\nlorem ipsum\nlorem ipsum\nlorem ipsum\nlorem ipsum\nlorem ipsum\nlorem ipsum\nlorem ipsum\nlorem ipsum\nlorem ipsum\nlorem ipsum\nlorem ipsum\nlorem ipsum\nlorem ipsum\nlorem ipsum";
+
+view.paintLines();
+view.paintLineNumbers();
+</script>
+</body>
+</html>
