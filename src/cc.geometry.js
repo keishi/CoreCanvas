@@ -1,25 +1,12 @@
 new CC.Class({
-    $name: "CC.Vec2",
-    $properties: ["0", "1", "length", "width", "height"],
-    init: function(x, y) {
-        this.x = x;
-        this.y = y;
-    },
-    set0: function(v) {
-        this.x = v;
-    },
-    get0: function() {
-        return this.x;
-    },
-    set1: function(v) {
-        this.y = v;
-    },
-    get1: function() {
-        return this.y;
-    },
-    getLength: function() {
-        return 2;
-    },
+    $name: "CC.Point",
+    $prototype: CC.Vec2
+});
+
+new CC.Class({
+    $name: "CC.Size",
+    $prototype: CC.Vec2,
+    $properties: ["width", "height"],
     setWidth: function(v) {
         this.x = v;
     },
@@ -31,33 +18,12 @@ new CC.Class({
     },
     getHeight: function() {
         return this.y;
-    },
-    inverse: function() {
-        this.x = -this.x;
-        this.y = -this.y;
-    },
-    add: function(vec) {
-        this.x += vec.x;
-        this.y += vec.y;
-    },
-    subtract: function(vec) {
-        this.x -= vec.x;
-        this.y -= vec.y;
     }
 });
-CC.Vec2.add = function(a, b) {
-    return new CC.Vec2(a.x + b.x, a.y + b.y);
-};
-CC.Vec2.subtract = function(a, b) {
-    return new CC.Vec2(a.x - b.x, a.y - b.y);
-};
-
-CC.Point = function(x, y) { return new CC.Vec2(x, y); };
-CC.Size = function(width, height) { return new CC.Vec2(width, height); };
 
 CC.Rect = function(x, y, width, height) {
-    this.origin = CC.Point(x, y);
-    this.size = CC.Size(width, height);
+    this.origin = new CC.Point(x, y);
+    this.size = new CC.Size(width, height);
 };
 CC.Rect.prototype.isEmpty = function() {
     return this.size.width === 0 || this.size.height === 0;

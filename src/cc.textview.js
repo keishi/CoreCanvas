@@ -14,6 +14,7 @@ new CC.Class({
         this._lineNumberWidth = 40;
         this.fontColor = "#000000";
         this._element.addEventListener("scroll", this.onScroll.bind(this), false);
+        this.selectedRanges = [new CC.Range(0, 0)];
     },
     getElement: function() {
         return this._element;
@@ -62,6 +63,28 @@ new CC.Class({
             var lineOffset = this._lineToOffset(i);
             this._canvas2D.drawText(i + 1, new CC.Point(10, lineOffset + this.lineHeight));
         }
+        
+        if (this.selectedRanges.length == 1) {
+            var selectedRange = this.selectedRanges[0];
+            if (selectedRange.length == 0) {
+                this._canvas2D.drawLine();
+            }
+        }
+    },
+    _columnToOffset: function(column, lineNumber) {
+        var ctx = this._canvas2D.ctx;
+        var line = this._textStorage.lines[lineNumber];
+        return ctx.measureText(line.substring(0, column)).width;
+    },
+    _offsetToColumn: function(offset, lineNumber) {
+        var ctx = this._canvas2D.ctx;
+        var line = this._textModel.line(lineNumber);
+        for (var column = 0; column < line.length; ++column) {
+            if (ctx.measureText(line.substring(0, column)).width > offset) {
+                break;
+            }
+        }
+        return column;
     },
     _lineToOffset: function(lineNumber) {
         return this.lineHeight * lineNumber;

@@ -19,9 +19,8 @@ CC.Class = function(definition) {
         c.displayName = className;
     }
     
-    var proto = {};
-    var superClass = definition["$inherits"];
-    proto.prototype = superClass;
+    var superClass = definition["$prototype"];
+    var proto = superClass ? Object.create(superClass.prototype) : {};
     for (var methodName in definition) {
         if (methodName.charAt(0) == "$") {
             continue;
@@ -32,16 +31,20 @@ CC.Class = function(definition) {
             method.displayName = c.displayName + "." + methodName;
         }
     }
-    var propertyNames = definition["$properties"] || [];
-    for (var i=0; i < propertyNames.length; i++) {
-        var propertyName = propertyNames[i];
+    c.properties = definition["$properties"] || [];
+    if (superClass) {
+        c.properties = c.properties.concat(superClass.properties);
+    }
+    // TODO: Should remove duplicate properties
+    for (var i=0; i < c.properties.length; i++) {
+        var propertyName = c.properties[i];
         var propertyDefinition = {};
         var capitalizedPropertyName = propertyName.charAt(0).toUpperCase() + propertyName.substr(1);
-        if (typeof definition["get" + capitalizedPropertyName] == "function") {
-            propertyDefinition["get"] = definition["get" + capitalizedPropertyName];
+        if (typeof proto["get" + capitalizedPropertyName] == "function") {
+            propertyDefinition["get"] = proto["get" + capitalizedPropertyName];
         }
-        if (typeof definition["set" + capitalizedPropertyName] == "function") {
-            propertyDefinition["set"] = definition["set" + capitalizedPropertyName];
+        if (typeof proto["set" + capitalizedPropertyName] == "function") {
+            propertyDefinition["set"] = proto["set" + capitalizedPropertyName];
         }
         Object.defineProperty(proto, propertyName, propertyDefinition);
     }

@@ -1,13 +1,6 @@
 function description(msg)
 {
-    // For MSIE 6 compatibility
-    var span = document.createElement("span");
-    span.innerHTML = '<p>' + msg + '</p><p>On success, you will see a series of "<span class="pass">PASS</span>" messages, followed by "<span class="pass">TEST COMPLETE</span>".</p>';
-    var description = document.getElementById("description");
-    if (description.firstChild)
-        description.replaceChild(span, description.firstChild);
-    else
-        description.appendChild(span);
+    debug('<h2>' + escapeHTML(msg) + '</h2>');
 }
 
 function debug(msg)
@@ -61,6 +54,8 @@ function isResultCorrect(_actual, _expected)
         return true;
     if (typeof(_expected) == "number" && isNaN(_expected))
         return typeof(_actual) == "number" && isNaN(_actual);
+    if (typeof _expected.isEqualTo == "function")
+        return _expected.isEqualTo(_actual);
     if (Object.prototype.toString.call(_expected) == Object.prototype.toString.call([]))
         return areArraysEqual(_actual, _expected);
     return false;
@@ -279,31 +274,3 @@ function shouldThrow(_a, _e)
     testFailed(_a + " should throw " + (typeof _e == "undefined" ? "an exception" : _ev) + ". Was " + _av + ".");
 }
 
-function gc() {
-    if (typeof GCController !== "undefined")
-        GCController.collect();
-    else {
-        function gcRec(n) {
-            if (n < 1)
-                return {};
-            var temp = {i: "ab" + i + (i / 100000)};
-            temp += "foo";
-            gcRec(n-1);
-        }
-        for (var i = 0; i < 1000; i++)
-            gcRec(10)
-    }
-}
-
-// It's possible for an async test to call finishJSTest() before js-test-post.js
-// has been parsed.
-function finishJSTest()
-{
-    wasFinishJSTestCalled = true;
-    if (!window.wasPostTestScriptParsed)
-        return;
-    shouldBeTrue("successfullyParsed");
-    debug('<br /><span class="pass">TEST COMPLETE</span>');
-    if (window.jsTestIsAsync && window.layoutTestController)
-        layoutTestController.notifyDone();
-}
