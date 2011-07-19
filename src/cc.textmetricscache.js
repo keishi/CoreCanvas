@@ -3,8 +3,9 @@ new CC.Class({
     init: function() {
         this.offsets = [];
     },
-    update: function(ctx, line) {
-        for (var i=0; i < line.length; i++) {console.log(line.substring(0, i + 1));
+    update: function(line) {
+        var ctx = CC.currentContext;
+        for (var i=0; i < line.length; i++) {
             this.offsets[i] = ctx.measureText(line.substring(0, i + 1)).width;
         }
     }

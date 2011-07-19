@@ -11,4 +11,8 @@ shouldBe('(new CC.TextModel("lorem\\nipsum")).textPositionToTextOffset(new CC.Te
 shouldBe('(new CC.TextModel("lorem\\nipsum")).textPositionToTextOffset(new CC.TextPosition(0, 1))', '6');
 shouldBe('(new CC.TextModel("lorem\\nipsum")).textPositionToTextOffset(new CC.TextPosition(4, 1))', '10');
 shouldBe('(new CC.TextModel("lorem\\nipsum")).textOffsetToTextPosition(10)', 'new CC.TextPosition(4, 1)');
+shouldBe('(new CC.TextModel("lorem\\nipsum")).textOffsetToTextPosition(5)', 'new CC.TextPosition(5, 0)');
 shouldBe('(new CC.TextModel("lorem\\nipsum")).textOffsetToTextPosition(1000)', 'null');
+
+description("CC.TextModel text manipulation");
+shouldBe('(new CC.TextModel("lorem\\nipsum")).delete(new Range(0, 2))', 'null');

@@ -36,5 +36,15 @@ new CC.Class({
             }
         }
         return null;
+    },
+    deleteRange: function(range) {
+        var text = this.text;
+        this.text = text.substring(0, range.location) + text.substring(range.location + range.length);
+    },
+    insertAt: function(range) {
+        replacementLines = replacement.split("\n");
+    },
+    replaceRange: function(range, replacement) {
+        replacementLines = replacement.split("\n");
     }
 });
