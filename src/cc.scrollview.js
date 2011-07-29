@@ -5,6 +5,7 @@ new CC.Class({
         element = element || document.createElement("div");
         element.style.overflow = "auto";
         this._element = element;
+        this._element.addEventListener("scroll", this.onScroll.bind(this));
         
         var contentElement = document.createElement("div");
         element.appendChild(contentElement);
@@ -15,5 +16,7 @@ new CC.Class({
     },
     getContentElement: function() {
         return this._contentElement;
+    },
+    onScroll: function() {
     }
 });

@@ -16,3 +16,5 @@ shouldBe('(new CC.TextModel("lorem\\nipsum")).textOffsetToTextPosition(1000)', '
 
 description("CC.TextModel text manipulation");
 shouldBe('a = new CC.TextModel("lorem\\nipsum"); a.deleteRange(new CC.Range(0, 2)); a.text', '"rem\\nipsum"');
+shouldBe('a = new CC.TextModel("lorem\\nipsum"); a.insertTextAt(" LOREM", 5); a.text', '"lorem LOREM\\nipsum"');
+shouldBe('a = new CC.TextModel("lorem\\nipsum"); a.replaceRange("LOREM", new CC.Range(0, 2)); a.text', '"LOREMrem\\nipsum"');

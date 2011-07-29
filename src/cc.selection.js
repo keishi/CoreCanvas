@@ -16,15 +16,32 @@ new CC.Class({
     getRangeCount: function() {
         return this._ranges.length;
     },
-    getRangeAt: function(index){
+    getRangeAt: function(index) {
         return this._ranges[index];
     },
-    collapseToStart: function(){
-        this._ranges = new CC.Range(this._ranges[0].location, 0);
+    collapseToStart: function() {
+        this._ranges = [new CC.Range(this._ranges[0].location, 0)];
     },
-    collapseToEnd: function(){
-        var lastRange = this._ranges[this.ranges.length - 1];
-        this._ranges = new CC.Range(lastRange.location + lastRange.length, 0);
+    collapseToEnd: function() {
+        var lastRange = this._ranges[this._ranges.length - 1];console.log(lastRange.toString());
+        this._ranges = [new CC.Range(lastRange.location + lastRange.length, 0)];
+    },
+    collapseEachRangeToStart: function() {
+        for (var i=0; i < this._ranges.length; i++) {
+            this._ranges[i].length = 0;
+        }
+    },
+    collapseEachRangeToEnd: function() {
+        for (var i=0; i < this._ranges.length; i++) {
+            var range = this._ranges[i];
+            range.location = range.location + location.length;
+            range.length = 0;
+        }
+    },
+    moveEachRangeForward: function(textOffset) {
+        for (var i=0; i < this._ranges.length; i++) {
+            this._ranges[i].location += textOffset;
+        }
     },
     _sortRanges: function() {
         this._ranges.sort(function(a, b) {

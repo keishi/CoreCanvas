@@ -6,13 +6,18 @@ new CC.Class({
         if (typeof text != "string") {
             text = "";
         }
+        this.textLength = 0;
         this.text = text;
+        this.font = new CC.Font("Courier", 14);
+        this.lineHeight = 16;
+        this.metricsCache = new CC.TextMetricsCache();
     },
     getText: function() {
         return this.lines.join("\n");
     },
     setText: function(text) {
         this.lines = text.split("\n");
+        this.textLength = text.length;
     },
     textPositionToTextOffset: function(textPosition) {
         var textOffset = 0;
@@ -38,13 +43,63 @@ new CC.Class({
         return null;
     },
     deleteRange: function(range) {
-        var text = this.text;
-        this.text = text.substring(0, range.location) + text.substring(range.location + range.length);
+        this.text = this.text.substring(0, range.location) + this.text.substring(range.location + range.length);
     },
-    insertAt: function(range) {
-        replacementLines = replacement.split("\n");
+    insertTextAt: function(text, location) {
+        this.text = this.text.substring(0, location) + text + this.text.substring(location);
     },
-    replaceRange: function(range, replacement) {
-        replacementLines = replacement.split("\n");
+    replaceRange: function(replacement, range) {
+        this.deleteRange(range);
+        this.insertTextAt(replacement, range.location);
+    },
+    rowToOffset: function(row){
+        return row * this.lineHeight;
+    },
+    offsetToRow: function(offset){
+        return Math.min(Math.max(Math.floor(offset / this.lineHeight), 0), this.lines.length - 1);
+    },
+    columnToOffset: function(col, row){
+        var line = this.lines[row];
+        this.font.set();
+        return CC.currentContext.measureText(line.substring(0, col)).width;
+    },
+    offsetToColumn: function(offset, row){
+        var line = this.lines[row];
+        for (var col = 0; col < line.length; ++col) {
+            if (CC.currentContext.measureText(line.substring(0, col)).width > offset) {
+                col--;
+                break;
+            }
+        }
+        return col;
+    },
+    textPositionToPosition: function(textPosition) {
+        return new CC.Point(this.columnToOffset(textPosition.col, textPosition.row), this.rowToOffset(textPosition.row));
+    },
+    positionToTextPosition: function(position) {
+        var row = this.offsetToRow(position.y);
+        var col = this.offsetToColumn(position.x, row);
+        return new CC.TextPosition(col, row);
+    },
+    textOffsetToPosition: function(textOffset) {
+        var textPosition = this.textOffsetToTextPosition(textOffset);
+        return this.textPositionToPosition(textPosition);
+    },
+    positionToTextOffset: function(position) {
+        var textPosition = this.positionToTextPosition(position);
+        return this.textPositionToTextOffset(textPosition);
+    },
+    textInRange: function(range) {
+        return this.text.substring(range.location, range.length);
+    },
+    splitRangeWithLineBreaks: function(range) {
+        var parts = [];
+        var lines = this.textInRange(range).split("\n");
+        var offset = 0;
+        for (var i = 0; i < lines.length; i++) {
+            var length = lines[i].length;
+            parts.push(new CC.Range(offset, length));
+            offset += length;
+        }
     }
 });

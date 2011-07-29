@@ -5,6 +5,7 @@
 <script src="../src/cc.vector.js"></script>
 <script src="../src/cc.geometry.js"></script>
 <script src="../src/cc.currentcontext.js"></script>
+<script src="../src/cc.color.js"></script>
 <script src="../src/cc.range.js"></script>
 <script src="../src/cc.selection.js"></script>
 <script src="../src/cc.textposition.js"></script>
@@ -12,12 +13,18 @@
 <script src="../src/cc.textmodel.js"></script>
 <script src="../src/cc.font.js"></script>
 <script src="../src/cc.scrollview.js"></script>
+<script src="../src/cc.canvas.js"></script>
+<script src="../src/cc.string-draw.js"></script>
+<script src="../src/cc.textlayerview.js"></script>
+<script src="../src/cc.textview.js"></script>
+
 <div id="console"></div>
 
 <script src="test-cc.class.js"></script>
 <script src="test-cc.vector.js"></script>
 <script src="test-cc.geometry.js"></script>
 <script src="test-cc.currentcontext.js"></script>
+<script src="test-cc.color.js"></script>
 <script src="test-cc.range.js"></script>
 <script src="test-cc.selection.js"></script>
 <script src="test-cc.textposition.js"></script>
@@ -25,3 +32,15 @@
 <script src="test-cc.textmodel.js"></script>
 <script src="test-cc.font.js"></script>
 <script src="test-cc.scrollview.js"></script>
+
+<script>
+var view = new CC.TextView();
+view.textModel.text = "Lorem ipsum dolor sit amet,\n\
+Lorem ipsum dolor sit amet Lorem ipsum dolor sit amet\n\
+Lorem ipsum dolor sit amet Lorem ipsum dolor sit amet\n\
+Lorem ipsum dolor sit amet Lorem ipsum dolor sit amet";
+document.body.appendChild(view.element);
+view.element.style.height = "300px";
+view._textLayerView.element.height = 900;
+view._textLayerView.draw();
+</script>

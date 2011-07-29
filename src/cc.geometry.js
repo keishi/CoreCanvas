@@ -1,6 +1,9 @@
 new CC.Class({
     $name: "CC.Point",
-    $prototype: CC.Vec2
+    $prototype: CC.Vec2,
+    offseted: function(x, y) {
+        return new CC.Point(this.x + x, this.y + y);
+    }
 });
 
 new CC.Class({
@@ -48,4 +51,7 @@ CC.Rect.prototype.containsRect = function(rect) {
 CC.Rect.prototype.intersectsRect = function(rect) {
     // TODO: implement
     return true;
+};
+CC.Rect.prototype.toString = function() {
+    return "Rect(" + this.origin.x + "," + this.origin.y + "," + this.size.width + "," + this.size.height + ")";
 };
