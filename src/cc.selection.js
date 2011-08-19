@@ -1,7 +1,7 @@
 new CC.Class({
     $name: "CC.Selection",
     $properties: ["isCollapsed", "rangeCount"],
-    init: function(location, length) {
+    init: function() {
         this._ranges = [];
     },
     getIsCollapsed: function(){
@@ -21,10 +21,12 @@ new CC.Class({
     },
     collapseToStart: function() {
         this._ranges = [new CC.Range(this._ranges[0].location, 0)];
+        this.direction = CC.SelectionDirection.NONE;
     },
     collapseToEnd: function() {
         var lastRange = this._ranges[this._ranges.length - 1];console.log(lastRange.toString());
         this._ranges = [new CC.Range(lastRange.location + lastRange.length, 0)];
+        this.direction = CC.SelectionDirection.NONE;
     },
     collapseEachRangeToStart: function() {
         for (var i=0; i < this._ranges.length; i++) {
@@ -82,5 +84,17 @@ new CC.Class({
             }
         }
         return true;
+    },
+    copy: function() {
+        var o = new CC.Selection();
+        var ranges = this._ranges;
+        for (var i=0; i < ranges.length; i++) {
+            o._ranges[i] = ranges[i].copy();
+        }
+        o.direction = this.direction;
+        return o;
+    },
+    toString: function() {
+        return "CC.Selection(" + this._ranges.map(function (e) { return e.toString(); }).join(" | ") + ")";
     }
 });

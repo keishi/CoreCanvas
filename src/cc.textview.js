@@ -5,15 +5,22 @@ new CC.Class({
     init: function() {
         this.__proto__.__proto__.init.apply(this);
         this._textLayerView = new CC.TextLayerView();
+        this.needsRedraw = false;
+
         this.contentElement.appendChild(this._textLayerView.element);
         document.addEventListener("keydown", this.onKeyDown.bind(this), false);
         this.element.addEventListener("mousedown", this.onMouseDown.bind(this), false);
+
+        // TODO: remove to manager object.
+        this.needsRedraw = true;
+        this.redrawIfNeededBound = this.redrawIfNeeded.bind(this);
+        window.requestAnimationFrame(this.redrawIfNeededBound);
     },
     getTextModel: function() {
         return this._textLayerView.textModel;
     },
     onScroll: function(e) {
-        this.redraw();
+        this.needsRedraw = true;
     },
     onKeyDown: function(e) {console.log(e.keyIdentifier, e);
         switch (e.keyIdentifier) {
@@ -54,6 +61,9 @@ new CC.Class({
             if (!e.shiftKey) {
                 c = c.toLowerCase();
             }
+            if (!/[\s\w]/.test(c)) {
+                break;
+            }
             this.replaceSelectionWithText(c);
             e.preventDefault();
             break;
@@ -66,7 +76,8 @@ new CC.Class({
         selection.collapseToStart();
         var cursorRange = selection.getRangeAt(0);
         cursorRange.location = mouseTextOffset;
-        this.redraw();
+        this._textLayerView.selection = selection;
+        this.needsRedraw = true;
     },
     moveCursorLeft: function() {
         var selection = this._textLayerView.selection;
@@ -78,20 +89,21 @@ new CC.Class({
         } else {
             selection.collapseToStart();
         }
-        this.redraw();
+        this._textLayerView.selection = selection;
+        this.needsRedraw = true;
     },
     moveCursorRight: function() {
-        var selection = this._textLayerView.selection;
+        var selection = this._textLayerView.selection;console.log(selection.toString());
         if (selection.getRangeCount() == 1 && selection.isCollapsed) {
             var cursorRange = selection.getRangeAt(0);
             if (cursorRange.location <= this._textLayerView.textModel.textLength) {
                 cursorRange.location++;
             }
         } else {
-            console.log("a");
             selection.collapseToEnd();
         }
-        this.redraw();
+        this._textLayerView.selection = selection;
+        this.needsRedraw = true;
     },
     moveCursorUp: function() {
         var selection = this._textLayerView.selection;
@@ -100,7 +112,8 @@ new CC.Class({
         var cursorRange = selection.getRangeAt(0);
         var cursorPosition = textModel.textOffsetToPosition(cursorRange.location);
         cursorRange.location = textModel.positionToTextOffset(cursorPosition.offseted(0, -textModel.lineHeight));
-        this.redraw();
+        this._textLayerView.selection = selection;
+        this.needsRedraw = true;
     },
     moveCursorDown: function() {
         var selection = this._textLayerView.selection;
@@ -109,37 +122,41 @@ new CC.Class({
         var cursorRange = selection.getRangeAt(0);
         var cursorPosition = textModel.textOffsetToPosition(cursorRange.location);
         cursorRange.location = textModel.positionToTextOffset(cursorPosition.offseted(0, textModel.lineHeight));
-        this.redraw();
+        this._textLayerView.selection = selection;
+        this.needsRedraw = true;
     },
     addSelectionLeft: function() {
         var selection = this._textLayerView.selection;
-        var lastRange = selection.getRangeAt(selection.getRangeCount() - 1);
-        if (lastRange.length > 0) {
-            if (this._textLayerView.textModel.text.length > lastRange.location + lastRange.length) {
-                lastRange.length++;
-            }
-        } else {
-            if (0 < lastRange.location + lastRange.length) {
-                lastRange.length--;
-            }
+        if (selection.direction == CC.SelectionDirection.NONE) {
+            selection.direction = CC.SelectionDirection.BACKWARD;
         }
-        this.redraw();
+        console.log(selection.direction);
+        if (selection.direction == CC.SelectionDirection.FORWARD) {
+            var lastRange = selection.getRangeAt(selection.getRangeCount() - 1);
+            lastRange.length--;
+        } else {
+            var firstRange = selection.getRangeAt(0);
+            firstRange.length++;
+            firstRange.location--;
+        }
+        this._textLayerView.selection = selection;
+        this.needsRedraw = true;
     },
     addSelectionRight: function() {
         var selection = this._textLayerView.selection;
-        var firstRange = selection.getRangeAt(0);
-        if (firstRange.length > 0) {
-            if (firstRange.location > 1) {
-                firstRange.location--;
-                firstRange.length++;
-            }
-        } else {
-            if (this._textLayerView.textModel.text.length > firstRange.location + firstRange.length) {
-                firstRange.location++;
-                firstRange.length--;
-            }
+        if (selection.direction == CC.SelectionDirection.NONE) {
+            selection.direction = CC.SelectionDirection.FORWARD;
         }
-        this.redraw();
+        if (selection.direction == CC.SelectionDirection.FORWARD) {
+            var lastRange = selection.getRangeAt(selection.getRangeCount() - 1);
+            lastRange.length++;
+        } else {
+            var firstRange = selection.getRangeAt(0);
+            firstRange.length--;
+            firstRange.location++;
+        }
+        this._textLayerView.selection = selection;
+        this.needsRedraw = true;
     },
     replaceSelectionWithText: function(text) {
         var selection = this._textLayerView.selection;
@@ -150,7 +167,8 @@ new CC.Class({
         
         selection.collapseEachRangeToStart();
         selection.moveEachRangeForward(text.length);
-        this.redraw();
+        this._textLayerView.selection = selection;
+        this.needsRedraw = true;
     },
     backSpace: function() {
         var selection = this._textLayerView.selection;
@@ -165,9 +183,20 @@ new CC.Class({
             textModel.deleteSelection(selection);
             selection.collapseEachRangeToStart();
         }
-        this.redraw();
+        this._textLayerView.selection = selection;
+        this.needsRedraw = true;
     },
-    redraw: function() {
+    redrawIfNeeded: function() {
+        if (!this.needsRedraw && !this._textLayerView.needsRedraw) {
+            window.requestAnimationFrame(this.redrawIfNeededBound);
+            return;
+        }
+        this.redraw();
+        this.needsRedraw = false;
+        this._textLayerView.needsRedraw = false;
+        window.requestAnimationFrame(this.redrawIfNeededBound);
+    },
+    redraw: function() {console.log("redraw");
         var element = this._element;
         this._textLayerView.draw(new CC.Rect(element.scrollLeft, element.scrollTop, element.offsetWidth, element.offsetHeight));
     }

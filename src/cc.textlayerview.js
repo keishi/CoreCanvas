@@ -1,20 +1,41 @@
+CC.SelectionDirection = {
+    NONE: "none",
+    FORWARD: "forward",
+    BACKWARD: "backward"
+};
+
 new CC.Class({
     $name: "CC.TextLayerView",
-    $properties: ["element", "lineHeight"],
+    $properties: ["element", "lineHeight", "selection"],
     init: function(){
         this._canvas = document.createElement("canvas");
         this.textModel = new CC.TextModel();
         this.textModel.font = new CC.Font("Courier", 14);
-        this.selection = new CC.Selection();
-        this.selection.addRange(new CC.Range(4, 0));
+        this._selection = new CC.Selection();
+        this._selection.addRange(new CC.Range(4, 0));
+        this.selectionDirection = CC.SelectionDirection.NONE;
         
         this.selectionColor = new CC.Color(255, 165, 0, 0.5);
+        this.needsRedraw = false;
     },
     getElement: function() {
         return this._canvas;
     },
     getLineHeight: function() {
         return this.textModel.lineHeight;
+    },
+    getSelection: function() {
+        return this._selection.copy();
+    },
+    setSelection: function(selection, dontResetSelectionDirection) {
+        if (this._selection.isEqualTo(selection)) {
+            return;
+        }
+        this._selection = selection.copy();
+        this.needsRedraw = true;
+        if (!dontResetSelectionDirection) {
+            this.selectionDirection = CC.SelectionDirection.NONE;
+        }
     },
     draw: function(rect) {
         var textModel = this.textModel;
@@ -36,17 +57,17 @@ new CC.Class({
             textModel.lines[i].drawAtPoint(new CC.Point(0, this.textModel.rowToOffset(i) + this.lineHeight));
         }
         // Draw selection
-        if (this.selection.isCollapsed) {
-            var cursorTextOffset = this.selection.getRangeAt(0).location;
+        if (this._selection.isCollapsed) {
+            var cursorTextOffset = this._selection.getRangeAt(0).location;
             var cursorTextPosition = textModel.textOffsetToTextPosition(cursorTextOffset);
             var cursorPosition = textModel.textPositionToPosition(cursorTextPosition);
             CC.Color.blue.setStroke();
             CC.canvas.drawSharpVerticalLine(cursorPosition, this.lineHeight, 1.0);
         } else {    
             this.selectionColor.setFill();
-            var rangeCount = this.selection.getRangeCount();
+            var rangeCount = this._selection.getRangeCount();
             for (var i = 0; i < rangeCount; i++) {
-                var range = this.selection.getRangeAt(i);
+                var range = this._selection.getRangeAt(i);
                 var startTextPosition = textModel.textOffsetToTextPosition(range.location);
                 var endTextPosition = textModel.textOffsetToTextPosition(range.location + range.length);
                 if (startTextPosition.row == endTextPosition.row) {

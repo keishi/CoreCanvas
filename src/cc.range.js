@@ -27,6 +27,9 @@ new CC.Class({
     isEqualTo: function(r) {
         return this.location == r.location && this.length == r.length;
     },
+    copy: function() {
+        return new CC.Range(this.location, this.length);
+    },
     toString: function() {
         return "CC.Range(" + this.location + "," + this.length + ")";
     }
