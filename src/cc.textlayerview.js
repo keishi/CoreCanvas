@@ -10,13 +10,14 @@ new CC.Class({
     init: function(){
         this._canvas = document.createElement("canvas");
         this.textModel = new CC.TextModel();
+        this.textModel.delegate = this;
         this.textModel.font = new CC.Font("Courier", 14);
         this._selection = new CC.Selection();
         this._selection.addRange(new CC.Range(4, 0));
         this.selectionDirection = CC.SelectionDirection.NONE;
-        
         this.selectionColor = new CC.Color(255, 165, 0, 0.5);
         this.needsRedraw = false;
+        this.delegate = null;
     },
     getElement: function() {
         return this._canvas;
@@ -37,6 +38,20 @@ new CC.Class({
             this.selectionDirection = CC.SelectionDirection.NONE;
         }
     },
+    textDidChange: function(model) {
+        if (this.delegate && this.delegate.textDidChange) {
+            this.delegate.textDidChange(this);
+        }
+    },
+    updateSize: function() {
+        CC.currentContext = this._canvas.getContext("2d");
+        var width = 0;
+        for (var i = 0; i < this.textModel.lines.length; i++) {
+            width = Math.max(width, CC.currentContext.measureText(this.textModel.lines[i]).width);
+        }
+        this._canvas.width = width;
+        this._canvas.height = this.lineHeight * this.textModel.lines.length;
+    },
     draw: function(rect) {
         var textModel = this.textModel;
         if (!rect) {
@@ -44,16 +59,24 @@ new CC.Class({
         }
         CC.currentContext = this._canvas.getContext("2d");
         var ctx = CC.currentContext;
-        ctx.clearRect(rect.origin.x, rect.origin.y, rect.size.width, rect.size.height);
+        // if (background has alpha)
+        //     ctx.clearRect(rect.origin.x, rect.origin.y, rect.size.width, rect.size.height);
         
         // Fill background
-        CC.Color.lightGray.setFill();
+        CC.Color.white.setFill();
         ctx.fillRect(rect.origin.x, rect.origin.y, rect.size.width, rect.size.height);
+
+        var firstVisibleRow = textModel.offsetToRow(rect.origin.y);
+        var lastVisibleRow = textModel.offsetToRow(rect.origin.y + rect.size.height);
+
+        // Draw additional lines so it doesn't flicker when scrolling.
+        var firstDrawingRow = Math.max(0, firstVisibleRow - 100);
+        var lastDrawingRow = Math.min(textModel.lines.length - 1, lastVisibleRow + 100);
 
         // Draw text
         this.textModel.font.set();
         CC.Color.black.setFill();
-        for (var i = 0; i < this.textModel.lines.length; i++) {
+        for (var i = firstDrawingRow; i <= lastDrawingRow; i++) {
             textModel.lines[i].drawAtPoint(new CC.Point(0, this.textModel.rowToOffset(i) + this.lineHeight));
         }
         // Draw selection
@@ -63,7 +86,7 @@ new CC.Class({
             var cursorPosition = textModel.textPositionToPosition(cursorTextPosition);
             CC.Color.blue.setStroke();
             CC.canvas.drawSharpVerticalLine(cursorPosition, this.lineHeight, 1.0);
-        } else {    
+        } else {
             this.selectionColor.setFill();
             var rangeCount = this._selection.getRangeCount();
             for (var i = 0; i < rangeCount; i++) {
@@ -75,7 +98,11 @@ new CC.Class({
                     var endPosition = textModel.textPositionToPosition(endTextPosition);
                     CC.canvas.fillRect(new CC.Rect(startPosition.x, startPosition.y, endPosition.x - startPosition.x, this.lineHeight));
                 } else { // range across multiple lines
-                    
+                    var startPosition = textModel.textPositionToPosition(startTextPosition);
+                    CC.canvas.fillRect(new CC.Rect(startPosition.x, startPosition.y, rect.origin.x + rect.size.width - startPosition.x, this.lineHeight));
+                    var endPosition = textModel.textPositionToPosition(endTextPosition);
+                    CC.canvas.fillRect(new CC.Rect(rect.origin.x, endPosition.y, endPosition.x, this.lineHeight));
+                    CC.canvas.fillRect(new CC.Rect(rect.origin.x, startPosition.y + this.lineHeight, rect.origin.x + rect.size.width, endPosition.y - startPosition.y - this.lineHeight));
                 }
             }
         }

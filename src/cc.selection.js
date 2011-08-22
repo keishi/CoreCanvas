@@ -54,7 +54,7 @@ new CC.Class({
         if (this._ranges.length <= 1)
             return;
         var newRanges = [];
-        for (var i=0; i < this._ranges.length - 1; i++) {
+        for (var i=0; i < this._ranges.length; i++) {
             var currentRange = this._ranges[i];
             while (i < this._ranges.length - 1) {
                 var nextRange = this._ranges[i + 1];
@@ -73,6 +73,13 @@ new CC.Class({
         this._ranges.push(range);
         this._sortRanges();
         this._concatSortedRangesIfPossible();
+    },
+    startTextOffset: function() {
+        return this._ranges[0].location;
+    },
+    endTextOffset: function() {
+        var lastRange = this._ranges[this._ranges.length - 1];
+        return lastRange.location + lastRange.length;
     },
     isEqualTo: function(selection) {
         if (this._ranges.length != selection._ranges.length) {

@@ -11,13 +11,21 @@ new CC.Class({
         this.font = new CC.Font("Courier", 14);
         this.lineHeight = 16;
         this.metricsCache = new CC.TextMetricsCache();
+        this.delegate = null;
     },
     getText: function() {
         return this.lines.join("\n");
     },
     setText: function(text) {
+        if (this.text == text) {
+            return;
+        }
         this.lines = text.split("\n");
         this.textLength = text.length;
+
+        if (this.delegate && this.delegate.textDidChange) {
+            this.delegate.textDidChange(this);
+        }
     },
     textPositionToTextOffset: function(textPosition) {
         var textOffset = 0;

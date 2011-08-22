@@ -1,6 +1,7 @@
 <link rel="stylesheet" href="test-style.css">
 <script src="../src/cc.test.js"></script>
 <script src="../src/cc.core.js"></script>
+<script src="../src/cc.debug.js"></script>
 <script src="../src/cc.class.js"></script>
 <script src="../src/cc.vector.js"></script>
 <script src="../src/cc.geometry.js"></script>
@@ -35,13 +36,23 @@
 <script src="test-cc.textlayerview.js"></script>
 
 <script>
+function getFile(url) {
+  if (window.XMLHttpRequest) {              
+    AJAX=new XMLHttpRequest();              
+  } else {                                  
+    AJAX=new ActiveXObject("Microsoft.XMLHTTP");
+  }
+  if (AJAX) {
+     AJAX.open("GET", url, false);                             
+     AJAX.send(null);
+     return AJAX.responseText;                                         
+  } else {
+     return false;
+  }                                             
+}
+
 var view = new CC.TextView();
-view.textModel.text = "Lorem ipsum dolor sit amet,\n\
-Lorem ipsum dolor sit amet Lorem ipsum dolor sit amet\n\
-Lorem ipsum dolor sit amet Lorem ipsum dolor sit amet\n\
-Lorem ipsum dolor sit amet Lorem ipsum dolor sit amet";
+view.textModel.text = getFile("../browser.cc");
 document.body.appendChild(view.element);
 view.element.style.height = "300px";
-view._textLayerView.element.height = 900;
-view._textLayerView.draw();
 </script>

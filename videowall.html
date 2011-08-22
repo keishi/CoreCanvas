@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<script src="src/cc.core.js"></script>
+	<script src="src/cc.debug.js"></script>
+	<script src="src/cc.class.js"></script>
+	<script src="src/cc.vector.js"></script>
+	<script src="src/cc.geometry.js"></script>
+	<script src="src/cc.currentcontext.js"></script>
+	<script src="src/cc.color.js"></script>
+	<script src="src/cc.range.js"></script>
+	<script src="src/cc.selection.js"></script>
+	<script src="src/cc.textposition.js"></script>
+	<script src="src/cc.textmetricscache.js"></script>
+	<script src="src/cc.textmodel.js"></script>
+	<script src="src/cc.font.js"></script>
+	<script src="src/cc.scrollview.js"></script>
+	<script src="src/cc.canvas.js"></script>
+	<script src="src/cc.string-draw.js"></script>
+	<script src="src/cc.textlayerview.js"></script>
+	<script src="src/cc.textview.js"></script>
+	<script src="src/cc.spritevideoview.js"></script>
+	<style>
+	body {
+		background-color: black;
+	}
+	@-webkit-keyframes fontbulger {
+	        0% {
+	                -webkit-transform: rotate3d(0,1,1,-45deg);
+	        }
+	        50% {
+	                -webkit-transform: rotate3d(0,1,1,45deg);
+	        }
+			75% {
+	                -webkit-transform: rotate3d(0,1,0,-45deg);
+	        }
+			100% {
+	                -webkit-transform: rotate3d(0,1,1,-45deg);
+	        }
+	}
+
+	#box {
+	     
+	}
+	canvas {
+		-webkit-animation: fontbulger 4s infinite;
+	}
+	#container {
+		width: 100%;
+		height: 700px;
+		-webkit-perspective: 800;
+		-webkit-perspective-origin: 50% 225px;
+		-webkit-perspective-origin-x: 50%;
+		-webkit-perspective-origin-y: 225px;
+	}
+	</style>
+</head>
+<body>
+	<div id="container"></div>
+	<video style="display:none" src="bunny.webm" autoplay loop id="bunny"></video>
+	<script>
+	var v = [];
+	var container = document.getElementById("container");
+	var video = document.getElementById("bunny");
+	for (var i=0; i < 10; i++) {
+		for (var j=0; j < 10; j++) {
+			var view = new CC.SpriteVideoView(video, new CC.Rect(i * 128, j * 72, 128, 72));
+			v.push(view);
+			container.appendChild(view.element);
+		}
+	}
+	var count = 0;
+	setInterval(function() {
+		count++;
+		if (count == 1000) {
+			count = 0;
+		}
+		var mod = count % 8;
+		for (var i=0; i < v.length; i++) {
+			if (i % 8 == mod) {
+				v[i].draw();
+			}
+		}
+	}, 1);
+	</script>
+</body>
+</html>

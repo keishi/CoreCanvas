@@ -24,6 +24,13 @@ new CC.Class({
         var end = Math.min(this.location + this.length, range.location + range.length);
         return end >= start;
     },
+    offseted: function(offset) {
+        return new CC.Range(this.location + offset, this.length);
+    },
+    offset: function(offset) {
+        this.location += offset;
+        return this;
+    },
     isEqualTo: function(r) {
         return this.location == r.location && this.length == r.length;
     },

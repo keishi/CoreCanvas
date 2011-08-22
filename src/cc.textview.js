@@ -5,11 +5,14 @@ new CC.Class({
     init: function() {
         this.__proto__.__proto__.init.apply(this);
         this._textLayerView = new CC.TextLayerView();
+        this._textLayerView.delegate = this;
         this.needsRedraw = false;
 
         this.contentElement.appendChild(this._textLayerView.element);
         document.addEventListener("keydown", this.onKeyDown.bind(this), false);
         this.element.addEventListener("mousedown", this.onMouseDown.bind(this), false);
+        this.element.addEventListener("mousemove", this.onMouseMove.bind(this), false);
+        this.element.addEventListener("mouseup", this.onMouseUp.bind(this), false);
 
         // TODO: remove to manager object.
         this.needsRedraw = true;
@@ -23,13 +26,20 @@ new CC.Class({
         this.needsRedraw = true;
     },
     onKeyDown: function(e) {console.log(e.keyIdentifier, e);
+        if (e.metaKey) {
+            return;
+        }
         switch (e.keyIdentifier) {
             case "U+0008": // Backspace
             this.backSpace();
             e.preventDefault();
             break;
             case "Down":
-            this.moveCursorDown();
+            if (e.shiftKey) {
+                this.addSelectionDown();
+            } else {
+                this.moveCursorDown();
+            }
             e.preventDefault();
             break;
             case "Right":
@@ -41,7 +51,11 @@ new CC.Class({
             e.preventDefault();
             break;
             case "Up":
-            this.moveCursorUp();
+            if (e.shiftKey) {
+                this.addSelectionUp();
+            } else {
+                this.moveCursorUp();
+            }
             e.preventDefault();
             break;
             case "Left":
@@ -78,6 +92,59 @@ new CC.Class({
         cursorRange.location = mouseTextOffset;
         this._textLayerView.selection = selection;
         this.needsRedraw = true;
+        this.dragSelectAnchorTextOffset = mouseTextOffset;
+    },
+    onMouseMove: function(e) {
+        if (e.which != 1 || !this.dragSelectAnchorTextOffset) {
+            return;
+        }
+        var textModel = this._textLayerView.textModel;
+        if (e.altKey) {
+            var selection = new CC.Selection();
+            var mousePosition = new CC.Point(e.offsetX, e.offsetY);
+            var mouseTextOffset = textModel.positionToTextOffset(mousePosition);
+            var startPosition;
+            var startTextPosition;
+            var endPosition;
+            var endTextPosition;
+            if (mouseTextOffset < this.dragSelectAnchorTextOffset) {
+                startPosition = mousePosition;
+                startTextPosition = textModel.positionToTextPosition(startPosition);
+                endTextPosition = textModel.textOffsetToTextPosition(this.dragSelectAnchorTextOffset);
+                endPosition = textModel.textPositionToPosition(endTextPosition);
+            } else {
+                startTextPosition = textModel.textOffsetToTextPosition(this.dragSelectAnchorTextOffset);
+                startPosition = textModel.textPositionToPosition(startTextPosition);
+                endPosition = mousePosition;
+                endTextPosition = textModel.positionToTextPosition(endPosition);
+            }
+            for (var i = startTextPosition.row; i <= endTextPosition.row; i++) {
+                var rowOffset = textModel.rowToOffset(i);
+                var rangeStartTextOffset = textModel.positionToTextOffset(new CC.Point(startPosition.x, rowOffset));
+                var rangeEndTextOffset = textModel.positionToTextOffset(new CC.Point(endPosition.x, rowOffset));
+                selection.addRange(new CC.Range(rangeStartTextOffset, rangeEndTextOffset - rangeStartTextOffset));
+            }
+            this._textLayerView.selection = selection;
+            this.needsRedraw = true;
+            return;
+        }
+        var mouseTextOffset = textModel.positionToTextOffset(new CC.Point(e.offsetX, e.offsetY));
+        var selection = new CC.Selection();
+        var selectionRangeLocation;
+        var selectionRangeLength;
+        if (mouseTextOffset < this.dragSelectAnchorTextOffset) {
+            selectionRangeLocation = mouseTextOffset;
+            selectionRangeLength = this.dragSelectAnchorTextOffset - selectionRangeLocation;
+        } else {
+            selectionRangeLocation = this.dragSelectAnchorTextOffset;
+            selectionRangeLength = mouseTextOffset - selectionRangeLocation;
+        }
+        selection.addRange(new CC.Range(selectionRangeLocation, selectionRangeLength));
+        this._textLayerView.selection = selection;
+        this.needsRedraw = true;
+    },
+    onMouseUp: function(e) {
+        this.dragSelectAnchorTextOffset = null;
     },
     moveCursorLeft: function() {
         var selection = this._textLayerView.selection;
@@ -125,31 +192,64 @@ new CC.Class({
         this._textLayerView.selection = selection;
         this.needsRedraw = true;
     },
+    addSelectionUp: function() {
+        var selection = this._textLayerView.selection;
+        var textModel = this._textLayerView.textModel;
+        if (this._textLayerView.selectionDirection == CC.SelectionDirection.NONE) {
+            this._textLayerView.selectionDirection = CC.SelectionDirection.BACKWARD;
+        }
+        var startTextOffset = textModel.textOffsetToPosition(selection.startTextOffset());
+        var newStart = textModel.positionToTextOffset(startTextOffset.offseted(0, -textModel.lineHeight));
+        var newSelection = new CC.Selection();
+        newSelection.addRange(new CC.Range(newStart, selection.endTextOffset() - newStart));
+        this._textLayerView.selection = newSelection;
+        this.needsRedraw = true;
+    },
+    addSelectionDown: function() {
+        var selection = this._textLayerView.selection;
+        var textModel = this._textLayerView.textModel;
+        if (this._textLayerView.selectionDirection == CC.SelectionDirection.NONE) {
+            this._textLayerView.selectionDirection = CC.SelectionDirection.FORWARD;
+        }
+        var endTextOffset = textModel.textOffsetToPosition(selection.endTextOffset());
+        var newEndTextOffset = textModel.positionToTextOffset(endTextOffset.offseted(0, textModel.lineHeight));
+        var newSelection = new CC.Selection();
+        var startTextOffset = selection.startTextOffset();
+        newSelection.addRange(new CC.Range(startTextOffset, newEndTextOffset - startTextOffset));
+        this._textLayerView.selection = newSelection;
+        this.needsRedraw = true;
+    },
     addSelectionLeft: function() {
         var selection = this._textLayerView.selection;
-        if (selection.direction == CC.SelectionDirection.NONE) {
-            selection.direction = CC.SelectionDirection.BACKWARD;
+        if (this._textLayerView.selectionDirection == CC.SelectionDirection.NONE) {
+            this._textLayerView.selectionDirection = CC.SelectionDirection.BACKWARD;
         }
-        console.log(selection.direction);
-        if (selection.direction == CC.SelectionDirection.FORWARD) {
+        if (this._textLayerView.selectionDirection == CC.SelectionDirection.FORWARD) {
             var lastRange = selection.getRangeAt(selection.getRangeCount() - 1);
             lastRange.length--;
         } else {
-            var firstRange = selection.getRangeAt(0);
-            firstRange.length++;
-            firstRange.location--;
+            var currentStart = selection.startTextOffset();
+            if (currentStart < 1) {
+                return;
+            }
+            var additionalRange = new CC.Range(currentStart - 1, 1);
+            selection.addRange(additionalRange);
         }
         this._textLayerView.selection = selection;
         this.needsRedraw = true;
     },
     addSelectionRight: function() {
         var selection = this._textLayerView.selection;
-        if (selection.direction == CC.SelectionDirection.NONE) {
-            selection.direction = CC.SelectionDirection.FORWARD;
+        if (this._textLayerView.selectionDirection == CC.SelectionDirection.NONE) {
+            this._textLayerView.selectionDirection = CC.SelectionDirection.FORWARD;
         }
-        if (selection.direction == CC.SelectionDirection.FORWARD) {
-            var lastRange = selection.getRangeAt(selection.getRangeCount() - 1);
-            lastRange.length++;
+        if (this._textLayerView.selectionDirection == CC.SelectionDirection.FORWARD) {
+            var currentEnd = selection.endTextOffset();
+            if (currentEnd >= this._textLayerView.textModel.textLength - 1) {
+                return;
+            }
+            var additionalRange = new CC.Range(currentEnd, 1);
+            selection.addRange(additionalRange);
         } else {
             var firstRange = selection.getRangeAt(0);
             firstRange.length--;
@@ -162,11 +262,16 @@ new CC.Class({
         var selection = this._textLayerView.selection;
         var textModel = this._textLayerView.textModel;
         
-        var cursorRange = selection.getRangeAt(0);
-        textModel.replaceRange(text, cursorRange);
-        
+        var offset = 0;
+        for (var i = 0; i < selection.getRangeCount(); i++) {
+            var range = selection.getRangeAt(i);
+            range.offset(offset);
+            textModel.replaceRange(text, range);
+            offset += text.length - range.length;
+        }
         selection.collapseEachRangeToStart();
         selection.moveEachRangeForward(text.length);
+
         this._textLayerView.selection = selection;
         this.needsRedraw = true;
     },
@@ -180,10 +285,13 @@ new CC.Class({
                 textModel.deleteRange(new CC.Range(cursorRange.location, 1));
             }
         } else {
-            textModel.deleteSelection(selection);
-            selection.collapseEachRangeToStart();
+            this.replaceSelectionWithText("");
+            return;
         }
         this._textLayerView.selection = selection;
+        this.needsRedraw = true;
+    },
+    textDidChage: function() {
         this.needsRedraw = true;
     },
     redrawIfNeeded: function() {
@@ -198,6 +306,8 @@ new CC.Class({
     },
     redraw: function() {console.log("redraw");
         var element = this._element;
+        this._textLayerView.updateSize();
+        this._textLayerView._canvas.width = Math.max(element.offsetWidth, this._textLayerView._canvas.width);
         this._textLayerView.draw(new CC.Rect(element.scrollLeft, element.scrollTop, element.offsetWidth, element.offsetHeight));
     }
 });
