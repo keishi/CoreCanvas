@@ -1,0 +1,10 @@
+.cc-candidate-view {
+  position: absolute;
+}
+.cc-candidate-view li {
+  font-weight: bold;
+  padding: 4px;
+}
+.cc-candidate-view li.selected {
+  background-color: rgb(128, 83, 0);
+}

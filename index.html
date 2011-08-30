@@ -1,28 +1,56 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <script src="src/cc.test.js"></script>
-  <script src="src/cc.core.js"></script>
-  <script src="src/cc.class.js"></script>
-  <script src="src/cc.vector.js"></script>
-  <script src="src/cc.geometry.js"></script>
-  <script src="src/cc.range.js"></script>
-  <script src="src/cc.canvas2d.js"></script>
-  <script src="src/cc.textstorage.js"></script>
-  <script src="src/cc.scrollview.js"></script>
-  <script src="src/cc.textview.js"></script>
-  
-  <title>CoreCanvas</title>
+    <style>
+    * {
+        margin: 0;
+        padding: 0;
+    }
+    </style>
+    <script src="src/cc.test.js"></script>
+    <script src="src/cc.core.js"></script>
+    <script src="src/cc.debug.js"></script>
+    <script src="src/cc.class.js"></script>
+    <script src="src/cc.vector.js"></script>
+    <script src="src/cc.geometry.js"></script>
+    <script src="src/cc.currentcontext.js"></script>
+    <script src="src/cc.color.js"></script>
+    <script src="src/cc.range.js"></script>
+    <script src="src/cc.selection.js"></script>
+    <script src="src/cc.textposition.js"></script>
+    <script src="src/cc.textmetricscache.js"></script>
+    <script src="src/cc.textmodel.js"></script>
+    <script src="src/cc.kanna.js"></script>
+    <script src="src/cc.inputmanager.js"></script>
+    <script src="src/cc.font.js"></script>
+    <script src="src/cc.scrollview.js"></script>
+    <script src="src/cc.canvas.js"></script>
+    <script src="src/cc.string-draw.js"></script>
+    <script src="src/cc.textlayerview.js"></script>
+    <script src="src/cc.textview.js"></script>
 </head>
 <body>
-<script>
-var view = new CC.TextView();
-document.body.appendChild(view.element);
-view.element.style.height = "300px";
-view.text = "lorem ipsum\nlorem ipsum\nlorem ipsum\nlorem ipsum\nlorem ipsum\nlorem ipsum\nlorem ipsum\nlorem ipsum\nlorem ipsum\nlorem ipsum\nlorem ipsum\nlorem ipsum\nlorem ipsum\nlorem ipsum\nlorem ipsum\nlorem ipsum\nlorem ipsum\nlorem ipsum\nlorem ipsum\nlorem ipsum\nlorem ipsum\nlorem ipsum\nlorem ipsum\nlorem ipsum\nlorem ipsum\nlorem ipsum\nlorem ipsum";
+    <script>
+    function getFile(url) {
+      if (window.XMLHttpRequest) {              
+        AJAX=new XMLHttpRequest();              
+      } else {                                  
+        AJAX=new ActiveXObject("Microsoft.XMLHTTP");
+      }
+      if (AJAX) {
+         AJAX.open("GET", url, false);                             
+         AJAX.send(null);
+         return AJAX.responseText;                                         
+      } else {
+         return false;
+      }                                             
+    }
 
-view.paintLines();
-view.paintLineNumbers();
-</script>
+    var view = new CC.TextView();
+    //view.textModel.text = getFile("../browser.cc");
+    view.textModel.text = "lorem ipsum\nlorem ipsum\nlorem ipsum\nlorem ipsum\nlorem ipsum\nlorem ipsum\nlorem ipsum\nlorem ipsum\nlorem ipsum\nlorem ipsum\nlorem ipsum\nlorem ipsum\nlorem ipsum\nlorem ipsum\nlorem ipsum\nlorem ipsum\nlorem ipsum\nlorem ipsum\nlorem ipsum\nlorem ipsum\nlorem ipsum\nlorem ipsum\nlorem ipsum\nlorem ipsum\nlorem ipsum\nlorem ipsum\nlorem ipsum";
+    document.body.appendChild(view.element);
+    view.element.style.height = "600px";
+    </script>
 </body>
 </html>

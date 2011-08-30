@@ -11,13 +11,25 @@ new CC.Class({
         this._canvas = document.createElement("canvas");
         this.textModel = new CC.TextModel();
         this.textModel.delegate = this;
-        this.textModel.font = new CC.Font("Courier", 14);
+        this.textModel.font = new CC.Font("Monaco", 18);
+        this.textModel.lineHeight = 20;
         this._selection = new CC.Selection();
         this._selection.addRange(new CC.Range(4, 0));
         this.selectionDirection = CC.SelectionDirection.NONE;
         this.selectionColor = new CC.Color(255, 165, 0, 0.5);
         this.needsRedraw = false;
         this.delegate = null;
+        this.cursorBlinkTimer = setInterval(this.onCursorBlink.bind(this), 500);
+        this.cursorBlinkTimerPaused = false;
+        this._cursorIsBlinkHidden = true;
+        this.convertingRange = new CC.Range(4, 10);//null;
+    },
+    onCursorBlink: function() {
+        if (this.cursorBlinkTimerPaused) {
+            return;
+        }
+        this._cursorIsBlinkHidden = !this._cursorIsBlinkHidden;
+        this.needsRedraw = true;
     },
     getElement: function() {
         return this._canvas;
@@ -33,10 +45,21 @@ new CC.Class({
             return;
         }
         this._selection = selection.copy();
+        this.pauseCursorBlink(700);
+        this._cursorIsBlinkHidden = false;
         this.needsRedraw = true;
         if (!dontResetSelectionDirection) {
             this.selectionDirection = CC.SelectionDirection.NONE;
         }
+    },
+    pauseCursorBlink: function(t) {
+        if (this.cursorBlinkTimerPaused) {
+            return;
+        }
+        this.cursorBlinkTimerPaused = true;
+        setTimeout(function() {
+            this.cursorBlinkTimerPaused = false;
+        }.bind(this), t);
     },
     textDidChange: function(model) {
         if (this.delegate && this.delegate.textDidChange) {
@@ -51,6 +74,13 @@ new CC.Class({
         }
         this._canvas.width = width;
         this._canvas.height = this.lineHeight * this.textModel.lines.length;
+    },
+    _drawLineUnderRow: function(row, start_col, end_col) {
+        var textModel = this.textModel;
+        var underlineOffset = this.lineHeight / 2 + textModel.font.size / 2;
+        var startPosition = textModel.textPositionToPosition(new CC.TextPosition(start_col, row)).offseted(0, underlineOffset);
+        var endPosition = textModel.textPositionToPosition(new CC.TextPosition(end_col, row)).offseted(0, underlineOffset);
+        CC.canvas.drawLine(startPosition, endPosition);
     },
     draw: function(rect) {
         var textModel = this.textModel;
@@ -77,15 +107,36 @@ new CC.Class({
         this.textModel.font.set();
         CC.Color.black.setFill();
         for (var i = firstDrawingRow; i <= lastDrawingRow; i++) {
-            textModel.lines[i].drawAtPoint(new CC.Point(0, this.textModel.rowToOffset(i) + this.lineHeight));
+            textModel.lines[i].drawAtPoint(new CC.Point(0, this.textModel.rowToOffset(i) + this.lineHeight / 2));
+        }
+        // Draw input manager underline
+        if (this.convertingRange) {
+            CC.Color.black.setStroke();
+            ctx.lineWidth = 2;
+            var startTextPosition = textModel.textOffsetToTextPosition(this.convertingRange.location);
+            var endTextPosition = textModel.textOffsetToTextPosition(this.convertingRange.location + this.convertingRange.length);
+            if (startTextPosition.row == endTextPosition.row) {
+                this._drawLineUnderRow(startTextPosition.row, startTextPosition.col, endTextPosition.col);
+            } else {
+                var startRow = startTextPosition.row;
+                var endRow = endTextPosition.row;
+                for (var i = startRow; i <= endRow; i++) {
+                    var startCol = i == startRow ? startTextPosition.col : 0;
+                    var endCol = i == endRow ? endTextPosition.col : textModel.lines[i].length;
+                    this._drawLineUnderRow(i, startCol, endCol);
+                }
+            }
         }
         // Draw selection
         if (this._selection.isCollapsed) {
-            var cursorTextOffset = this._selection.getRangeAt(0).location;
-            var cursorTextPosition = textModel.textOffsetToTextPosition(cursorTextOffset);
-            var cursorPosition = textModel.textPositionToPosition(cursorTextPosition);
-            CC.Color.blue.setStroke();
-            CC.canvas.drawSharpVerticalLine(cursorPosition, this.lineHeight, 1.0);
+            if (!this._cursorIsBlinkHidden) {
+                var cursorTextOffset = this._selection.getRangeAt(0).location;
+                var cursorTextPosition = textModel.textOffsetToTextPosition(cursorTextOffset);
+                var cursorPosition = textModel.textPositionToPosition(cursorTextPosition);
+                CC.Color.blue.setStroke();
+                ctx.lineWidth = 1;
+                CC.canvas.drawSharpVerticalLine(cursorPosition, this.lineHeight, 1.0);
+            }
         } else {
             this.selectionColor.setFill();
             var rangeCount = this._selection.getRangeCount();

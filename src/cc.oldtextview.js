@@ -40,7 +40,7 @@ new CC.Class({
         var ctx = this._canvas2D.ctx;
         ctx.font = this.fontSize + "px " + this.fontFamily;
         ctx.fillStyle = this.fontColor;
-        ctx.textBaseline = "bottom";
+        ctx.textBaseline = "middle";
     },
     onScroll: function(e) {
         this.paintLines();
@@ -61,7 +61,7 @@ new CC.Class({
         this.setFontStyle();
         for (var i = firstLine; i < lastLine; ++i) {
             var lineOffset = this._lineToOffset(i);
-            this._canvas2D.drawText(i + 1, new CC.Point(10, lineOffset + this.lineHeight));
+            this._canvas2D.drawText(i + 1, new CC.Point(0, lineOffset + this.lineHeight / 2));
         }
         
         if (this.selectedRanges.length == 1) {

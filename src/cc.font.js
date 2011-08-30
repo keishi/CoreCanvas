@@ -6,5 +6,6 @@ new CC.Class({
     },
     set: function() {
         CC.currentContext.font = this.size + "px \"" + this.name + "\"";
+        CC.currentContext.textBaseline = "middle";
     }
 });

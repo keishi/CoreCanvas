@@ -18,5 +18,6 @@ new CC.Class({
         return this._contentElement;
     },
     onScroll: function() {
-    }
+    },
+    scrollbarWidth: 14
 });

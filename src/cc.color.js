@@ -45,3 +45,4 @@ CC.Color.red = new CC.Color(255, 0, 0);
 CC.Color.green = new CC.Color(0, 255, 0);
 CC.Color.blue = new CC.Color(0, 0, 255);
 CC.Color.lightGray = new CC.Color(230, 230, 230);
+CC.Color.gray = new CC.Color(128, 128, 128);
